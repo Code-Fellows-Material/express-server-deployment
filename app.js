@@ -1,9 +1,9 @@
 'use strict';
 
-const { response } = require('express');
-const { request } = require('express');
 const express = require('express');
+const app = express(); // express -> singleton || a single object that can be modified, but there can be only one. 
 
+//---------------------------------- Messages ----------------------------------
 const messages = [];
 
 class Message {
@@ -13,29 +13,57 @@ class Message {
   }
 }
 
-// express -> singleton || a single object that can be modified, but there can be only one. 
-const app = express();
+//---------------------------------- Routes ----------------------------------
+
+// GET Route
 
 app.get('/message', (req, res) => {
   console.log('request: ', + req.method);
-
   res.send(messages);
 });
 
-app.post('/message', (req, res,next) => {
-  const messageText = req.query.text;
-  const authorName = req.query.author;
+//POST Route
 
-  next('Ann error occured'); // Will pick up any erros and run 
-
-  const message = new Message(messageText, authorName);
-  messages.push(message);
+app.post('/message',  createMessage, saveMessage, (req, res, next) => {
   res.send(messages);
+});
+
+// Use Routes
+
+app.use(function (err, request, response, next) {
+  console.log(err);
+  response.send('Error handler hit!');
 });
 
 app.use((req, res)=> {
   res.status(404).send('******Request not found*********');
 });
+
+//---------------------------------- Middle Wear ----------------------------------
+
+function createMessage(req, res, next) {
+  console.log('createMessage Called');
+
+  const messageText = req.query.text;
+  const authorName = req.query.author;
+
+  if (!messageText || !authorName) {
+    next(new Error('No text or author')); // Added Error as that is what I was finding in online examples.
+  } else {
+    const message = new Message(messageText, authorName);
+    req.message = message;
+    next();
+  }
+}
+
+function saveMessage(req, res, next) {
+  console.log('message added to req:', req.message);
+  let message = req.message;
+  messages.push(message);
+  next();
+}
+
+
 
 module.exports = {
   start: function (port){
