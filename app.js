@@ -17,6 +17,11 @@ class Message {
 
 // GET Route
 
+app.get('/', (req, res) => {
+  res.send('Home');
+});
+
+
 app.get('/message', (req, res) => {
   console.log('request: ', + req.method);
   res.send(messages);
