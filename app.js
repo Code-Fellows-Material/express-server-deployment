@@ -15,6 +15,7 @@ class Message {
 
 //---------------------------------- Routes ----------------------------------
 
+app.use(logger);
 // GET Route
 
 app.get('/', (req, res) => {
@@ -35,10 +36,7 @@ app.post('/message',  createMessage, saveMessage, (req, res, next) => {
 
 // Use Routes
 
-app.use(function (err, request, response, next) {
-  console.log(err);
-  response.send('Error handler hit!');
-});
+app.use(errorhandler);
 
 app.use((req, res)=> {
   res.status(404).send('******Request not found*********');
@@ -53,7 +51,7 @@ function createMessage(req, res, next) {
   const authorName = req.query.author;
 
   if (!messageText || !authorName) {
-    next(new Error('No text or author')); // Added Error as that is what I was finding in online examples.
+    next('No text or author'); // Added Error as that is what I was finding in online examples.
   } else {
     const message = new Message(messageText, authorName);
     req.message = message;
@@ -68,7 +66,15 @@ function saveMessage(req, res, next) {
   next();
 }
 
+function logger(req, res, next){
+  console.log('logger');
+  next();
+}
 
+function errorhandler(err, request, response, next) {
+  console.log(err);
+  response.send('Error handler hit!');
+}
 
 module.exports = {
   start: function (port){
